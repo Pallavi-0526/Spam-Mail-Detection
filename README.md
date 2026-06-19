@@ -1,7 +1,7 @@
 # 📧 Spam Mail Detection — AI/ML Project
 
 > **Internpe AI/ML Internship | Project 2**
-> Built by **Gnanendra** · [@Internpe](https://linkedin.com/company/internpe)
+> Built by **Pallavi** · [@Internpe](https://linkedin.com/company/internpe)
 
 ---
 
@@ -116,6 +116,6 @@ User Input → TF-IDF Transform → Logistic Regression → SPAM / HAM + Confide
 
 ## 📬 Connect
 
-**Gnanendra** — [LinkedIn](https://linkedin.com) | [GitHub](https://github.com)
+**Pallavi** — [LinkedIn](https://linkedin.com) | [GitHub](https://github.com)
 
 *Part of Internpe AI/ML + Data Science Internship*
