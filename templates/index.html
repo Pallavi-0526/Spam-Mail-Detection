@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spam Mail Detector | AI-Powered</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a22;
+    --surface2: #22222e;
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.15);
+    --accent: #6c63ff;
+    --accent-glow: rgba(108,99,255,0.25);
+    --spam: #ff4757;
+    --spam-bg: rgba(255,71,87,0.12);
+    --ham: #2ed573;
+    --ham-bg: rgba(46,213,115,0.12);
+    --text: #f0f0f5;
+    --text-muted: #888899;
+    --text-dim: #555566;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Header ── */
+  header {
+    width: 100%;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text { font-size: 16px; font-weight: 600; }
+  .logo-sub { font-size: 12px; color: var(--text-muted); }
+  .badge {
+    font-size: 11px; font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--accent-glow);
+    color: var(--accent);
+    border: 1px solid rgba(108,99,255,0.3);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 3rem 2rem 1.5rem;
+    max-width: 680px;
+    width: 100%;
+  }
+  .hero h1 { font-size: 2.4rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.75rem; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { font-size: 1rem; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── Stats row ── */
+  .stats {
+    display: flex; gap: 12px; justify-content: center;
+    flex-wrap: wrap; padding: 1rem 2rem 2rem;
+    max-width: 680px; width: 100%;
+  }
+  .stat-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-pill strong { color: var(--text); }
+
+  /* ── Main card ── */
+  .main-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 680px;
+    width: calc(100% - 2rem);
+    margin: 0 1rem 2rem;
+  }
+
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 1px;
+    color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+    padding: 1rem;
+    resize: vertical;
+    min-height: 140px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--text-dim); }
+
+  .char-count { font-size: 12px; color: var(--text-dim); text-align: right; margin-top: 6px; }
+
+  /* ── Examples ── */
+  .examples-row {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin: 1rem 0;
+  }
+  .example-btn {
+    font-size: 12px; padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .example-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .example-btn.spam-ex { border-color: rgba(255,71,87,0.3); color: #ff6b78; }
+  .example-btn.spam-ex:hover { background: var(--spam-bg); }
+  .example-btn.ham-ex  { border-color: rgba(46,213,115,0.3); color: #5ee88a; }
+  .example-btn.ham-ex:hover  { background: var(--ham-bg); }
+
+  /* ── Predict button ── */
+  .predict-btn {
+    width: 100%; padding: 14px;
+    background: var(--accent);
+    color: #fff; font-size: 15px; font-weight: 600;
+    border: none; border-radius: 12px;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.3px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .predict-btn:hover  { opacity: 0.9; }
+  .predict-btn:active { transform: scale(0.99); }
+  .predict-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Result ── */
+  #result-area { margin-top: 1.5rem; display: none; }
+
+  .result-card {
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid;
+    animation: fadeUp 0.3s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .result-card.spam { background: var(--spam-bg); border-color: rgba(255,71,87,0.3); }
+  .result-card.ham  { background: var(--ham-bg);  border-color: rgba(46,213,115,0.3); }
+
+  .result-header { display: flex; align-items: center; gap: 14px; margin-bottom: 1rem; }
+  .result-icon { font-size: 36px; }
+  .result-label { font-size: 13px; color: var(--text-muted); margin-bottom: 2px; }
+  .result-title { font-size: 22px; font-weight: 700; }
+  .result-title.spam { color: var(--spam); }
+  .result-title.ham  { color: var(--ham); }
+
+  .result-meta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .meta-pill {
+    padding: 6px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    background: rgba(255,255,255,0.06);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .confidence-bar-wrap { margin-top: 1rem; }
+  .confidence-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .confidence-track { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+  .confidence-fill  { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .confidence-fill.spam { background: var(--spam); }
+  .confidence-fill.ham  { background: var(--ham); }
+
+  .signals { margin-top: 1rem; }
+  .signals-title { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .signal-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .signal-tag {
+    font-size: 12px; padding: 3px 10px; border-radius: 6px;
+    background: rgba(255,71,87,0.15); color: #ff8c95;
+    border: 1px solid rgba(255,71,87,0.2);
+  }
+
+  /* ── How it works ── */
+  .how-section { max-width: 680px; width: calc(100% - 2rem); margin: 0 1rem 3rem; }
+  .how-title { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 8px;
+  }
+  .step-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .step-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ── Footer ── */
+  footer { padding: 1.5rem; text-align: center; font-size: 12px; color: var(--text-dim); border-top: 1px solid var(--border); width: 100%; }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    <div>
+      <div class="logo-text">SpamShield AI</div>
+      <div class="logo-sub">Spam Mail Detection</div>
+    </div>
+  </div>
+  <span class="badge">INTERNPE PROJECT</span>
+</header>
+
+<div class="hero">
+  <h1>Detect <span>Spam</span> Instantly<br>with Machine Learning</h1>
+  <p>Powered by Logistic Regression + TF-IDF vectorization trained on 5,500+ real emails and SMS messages.</p>
+</div>
+
+<div class="stats">
+  <div class="stat-pill">🎯 <strong>96.2%</strong> Test Accuracy</div>
+  <div class="stat-pill">📩 <strong>5,572</strong> Training Samples</div>
+  <div class="stat-pill">🧠 <strong>TF-IDF</strong> + Logistic Regression</div>
+  <div class="stat-pill">⚡ <strong>&lt;50ms</strong> Prediction Time</div>
+</div>
+
+<div class="main-card">
+  <div class="section-label">Enter message to analyze</div>
+  <textarea id="msg-input" placeholder="Paste your email or SMS message here...&#10;&#10;Example: 'Congratulations! You've won a FREE iPhone. Click now to claim your prize!'" maxlength="2000"></textarea>
+  <div class="char-count"><span id="char-count">0</span> / 2000 characters</div>
+
+  <div class="section-label" style="margin-top:1rem;">Try an example</div>
+  <div class="examples-row" id="examples-row">
+    <button class="example-btn spam-ex" onclick="loadExample(0)">🚨 Spam: Prize winner</button>
+    <button class="example-btn ham-ex"  onclick="loadExample(1)">✅ Ham: Casual chat</button>
+    <button class="example-btn spam-ex" onclick="loadExample(2)">🚨 Spam: Free ringtone</button>
+    <button class="example-btn ham-ex"  onclick="loadExample(3)">✅ Ham: Thank you msg</button>
+  </div>
+
+  <button class="predict-btn" id="predict-btn" onclick="predict()">
+    <span id="btn-content">🔍 Analyze Message</span>
+  </button>
+
+  <div id="result-area">
+    <div class="result-card" id="result-card">
+      <div class="result-header">
+        <div class="result-icon" id="result-icon"></div>
+        <div>
+          <div class="result-label">Detection Result</div>
+          <div class="result-title" id="result-title"></div>
+        </div>
+      </div>
+      <div class="result-meta" id="result-meta"></div>
+      <div class="confidence-bar-wrap">
+        <div class="confidence-label">
+          <span>Confidence</span>
+          <span id="conf-pct"></span>
+        </div>
+        <div class="confidence-track">
+          <div class="confidence-fill" id="conf-fill"></div>
+        </div>
+      </div>
+      <div class="signals" id="signals-section" style="display:none">
+        <div class="signals-title">⚠️ Spam signals detected:</div>
+        <div class="signal-tags" id="signal-tags"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="how-section">
+  <div class="how-title">How it works</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-name">Input</div>
+      <div class="step-desc">You enter an email or SMS message</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-name">TF-IDF</div>
+      <div class="step-desc">Text converted to numerical feature vectors</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-name">Predict</div>
+      <div class="step-desc">Logistic Regression classifies the input</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-name">Result</div>
+      <div class="step-desc">SPAM or HAM with confidence score</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Built by Gnanendra · Internpe AI/ML Internship &nbsp;|&nbsp;
+  <a href="https://github.com" target="_blank">GitHub</a> &nbsp;|&nbsp;
+  <a href="https://linkedin.com" target="_blank">LinkedIn</a>
+</footer>
+
+<script>
+const EXAMPLES = [
+  "CONGRATULATIONS! You've WON a £1000 Tesco gift card. CALL NOW: 08081 565656 to CLAIM your prize! T&Cs at www.prize.co.uk",
+  "Hey, are we still on for lunch tomorrow? Let me know what time works for you. I was thinking that new place downtown.",
+  "FREE ringtone! Txt MUSIC to 87121 to get FREE music on ur mobile every week! 3 POUNDS per week. Reply STOP to cancel.",
+  "I've been searching for the right words to thank you for this breather. I promise I won't take your help for granted. You have been wonderful and a blessing at all times."
+];
+
+const textarea = document.getElementById('msg-input');
+
+textarea.addEventListener('input', () => {
+  document.getElementById('char-count').textContent = textarea.value.length;
+});
+
+function loadExample(idx) {
+  textarea.value = EXAMPLES[idx];
+  document.getElementById('char-count').textContent = EXAMPLES[idx].length;
+  document.getElementById('result-area').style.display = 'none';
+}
+
+async function predict() {
+  const msg = textarea.value.trim();
+  if (!msg) { alert('Please enter a message first.'); return; }
+
+  const btn = document.getElementById('predict-btn');
+  const btnContent = document.getElementById('btn-content');
+  btn.disabled = true;
+  btnContent.innerHTML = '<div class="spinner"></div> Analyzing...';
+
+  try {
+    const res = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg })
+    });
+    const data = await res.json();
+    showResult(data);
+  } catch(e) {
+    alert('Error connecting to server. Make sure Flask is running.');
+  } finally {
+    btn.disabled = false;
+    btnContent.innerHTML = '🔍 Analyze Message';
+  }
+}
+
+function showResult(data) {
+  const area  = document.getElementById('result-area');
+  const card  = document.getElementById('result-card');
+  const icon  = document.getElementById('result-icon');
+  const title = document.getElementById('result-title');
+  const meta  = document.getElementById('result-meta');
+  const fill  = document.getElementById('conf-fill');
+  const pct   = document.getElementById('conf-pct');
+
+  area.style.display = 'block';
+  card.className = 'result-card ' + (data.is_spam ? 'spam' : 'ham');
+  icon.textContent  = data.is_spam ? '🚨' : '✅';
+  title.className   = 'result-title ' + (data.is_spam ? 'spam' : 'ham');
+  title.textContent = data.is_spam ? 'SPAM Detected' : 'HAM — Safe Message';
+
+  meta.innerHTML = `
+    <div class="meta-pill">📊 ${data.confidence}% confidence</div>
+    <div class="meta-pill">📝 ${data.message_len} words</div>
+    <div class="meta-pill">${data.is_spam ? '⛔ Not safe' : '🟢 Safe to open'}</div>
+  `;
+
+  fill.className = 'confidence-fill ' + (data.is_spam ? 'spam' : 'ham');
+  fill.style.width = '0%';
+  setTimeout(() => { fill.style.width = data.confidence + '%'; }, 50);
+  pct.textContent = data.confidence + '%';
+
+  const sigSec  = document.getElementById('signals-section');
+  const sigTags = document.getElementById('signal-tags');
+  if (data.signals && data.signals.length > 0) {
+    sigSec.style.display = 'block';
+    sigTags.innerHTML = data.signals.map(s => `<span class="signal-tag">${s}</span>`).join('');
+  } else {
+    sigSec.style.display = 'none';
+  }
+
+  area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>
